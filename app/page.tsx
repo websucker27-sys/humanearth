@@ -1,13 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [count, setCount] = useState(8109442017);
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -27,14 +28,13 @@ export default function Home() {
 
     if (error) {
       if (error.code === "23505") {
-        setError("This email is already registered.");
+        router.push(`/register?email=${encodeURIComponent(email)}`);
       } else {
         setError("Something went wrong. Please try again.");
+        setLoading(false);
       }
-      setLoading(false);
     } else {
-      setSubmitted(true);
-      setLoading(false);
+      router.push(`/register?email=${encodeURIComponent(email)}`);
     }
   }
 
@@ -63,36 +63,23 @@ export default function Home() {
         </span>
       </div>
 
-      {!submitted ? (
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-          <input
-            type="email"
-            required
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Saving..." : "Claim your page"}
-          </button>
-        </form>
-      ) : (
-        <div className="text-center">
-          <p className="text-green-400 text-lg font-medium">You are registered.</p>
-          <p className="text-gray-500 text-sm mt-1 mb-6">Now create your permanent page.</p>
-          <a
-            href="/register"
-            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors inline-block"
-          >
-            Write my sentence →
-          </a>
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+        <input
+          type="email"
+          required
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          {loading ? "Loading..." : "Claim your page"}
+        </button>
+      </form>
 
       {error && (
         <p className="text-red-400 text-sm mt-3">{error}</p>
