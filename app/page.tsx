@@ -42,7 +42,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-20">
 
       <p className="text-xs tracking-widest text-gray-500 uppercase mb-6">
-        March 13, 2026
+        March 14, 2026
       </p>
 
       <h1 className="text-5xl md:text-7xl font-medium text-center tracking-tight mb-4">
@@ -83,8 +83,14 @@ export default function Home() {
         </form>
       ) : (
         <div className="text-center">
-          <p className="text-green-400 text-lg font-medium">You are on the list.</p>
-          <p className="text-gray-500 text-sm mt-1">We will contact you when your page is ready.</p>
+          <p className="text-green-400 text-lg font-medium">You are registered.</p>
+          <p className="text-gray-500 text-sm mt-1 mb-6">Now create your permanent page.</p>
+          <a
+            href="/register"
+            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors inline-block"
+          >
+            Write my sentence →
+          </a>
         </div>
       )}
 

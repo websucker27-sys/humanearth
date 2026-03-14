@@ -1,145 +1,118 @@
 "use client";
-import { useState } from "react";
-import { supabase } from "../supabase";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
-const countries = [
-  "Afghanistan","Albania","Algeria","Angola","Argentina","Australia","Austria","Bangladesh",
-  "Belgium","Bolivia","Brazil","Cameroon","Canada","Chile","China","Colombia","Congo",
-  "Cuba","Denmark","Ecuador","Egypt","Ethiopia","Finland","France","Germany","Ghana",
-  "Greece","Guatemala","Haiti","Honduras","Hungary","India","Indonesia","Iran","Iraq",
-  "Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kenya","Madagascar","Malaysia",
-  "Mali","Mexico","Morocco","Mozambique","Myanmar","Nepal","Netherlands","New Zealand",
-  "Nicaragua","Niger","Nigeria","Norway","Pakistan","Panama","Paraguay","Peru","Philippines",
-  "Poland","Portugal","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Sierra Leone",
-  "Somalia","South Africa","South Korea","Spain","Sri Lanka","Sudan","Sweden","Switzerland",
-  "Syria","Tanzania","Thailand","Tunisia","Turkey","Uganda","Ukraine","United Kingdom",
-  "United States","Uruguay","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"
-];
-
-export default function Register() {
-  const router = useRouter();
+export default function Home() {
+  const [count, setCount] = useState(8109442017);
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [country, setCountry] = useState("");
-  const [sentence, setSentence] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCount((c) => c + Math.floor(Math.random() * 2));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("signups")
-      .update({ name, country, sentence })
-      .eq("email", email)
-      .select()
-      .single();
+      .insert([{ email }]);
 
     if (error) {
-      setError("Email not found. Please sign up on the homepage first.");
+      if (error.code === "23505") {
+        setError("This email is already registered.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
       setLoading(false);
-      return;
+    } else {
+      setSubmitted(true);
+      setLoading(false);
     }
-
-    router.push(`/human/${data.human_number}`);
   }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-20">
 
-      <a href="/" className="text-xs text-gray-600 uppercase tracking-widest mb-12 hover:text-gray-400 transition-colors">
-        ← Human Earth
-      </a>
+      <p className="text-xs tracking-widest text-gray-500 uppercase mb-6">
+        March 14, 2026
+      </p>
 
-      {step === 1 && (
-        <div className="w-full max-w-md">
-          <h1 className="text-3xl font-medium text-center mb-2">Claim your page</h1>
-          <p className="text-gray-500 text-center text-sm mb-10">Enter the email you signed up with</p>
+      <h1 className="text-5xl md:text-7xl font-medium text-center tracking-tight mb-4">
+        Human Earth
+      </h1>
 
-          <div className="flex flex-col gap-3">
-            <input
-              type="email"
-              required
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm w-full"
-            />
-            <button
-              onClick={() => { if (email) setStep(2); }}
-              className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors"
-            >
-              Continue
-            </button>
-          </div>
+      <p className="text-lg md:text-xl text-gray-400 text-center max-w-xl mb-12 leading-relaxed">
+        Every person on earth. One permanent page. One sentence. Forever.
+        The human layer of the internet — owned by no one, belonging to everyone.
+      </p>
+
+      <div className="flex flex-col items-center mb-16">
+        <span className="text-6xl md:text-8xl font-medium tabular-nums tracking-tight">
+          {count.toLocaleString()}
+        </span>
+        <span className="text-gray-500 text-sm mt-2">
+          humans registered — join them
+        </span>
+      </div>
+
+      {!submitted ? (
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+          <input
+            type="email"
+            required
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            {loading ? "Saving..." : "Claim your page"}
+          </button>
+        </form>
+      ) : (
+        <div className="text-center">
+          <p className="text-green-400 text-lg font-medium">You are registered.</p>
+          <p className="text-gray-500 text-sm mt-1 mb-6">Now create your permanent page.</p>
+          <a
+            href="/register"
+            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors inline-block"
+          >
+            Write my sentence →
+          </a>
         </div>
       )}
 
-      {step === 2 && (
-        <form onSubmit={handleSubmit} className="w-full max-w-md">
-          <h1 className="text-3xl font-medium text-center mb-2">Your permanent page</h1>
-          <p className="text-gray-500 text-center text-sm mb-10">This is forever. Take your time.</p>
-
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Your name</label>
-              <input
-                type="text"
-                required
-                placeholder="What should humanity call you?"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm w-full"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Your country</label>
-              <select
-                required
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/30 text-sm w-full"
-              >
-                <option value="">Select your country</option>
-                {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">
-                Your one sentence — what do you want humanity to remember?
-              </label>
-              <textarea
-                required
-                maxLength={280}
-                placeholder="Write one sentence. Make it yours."
-                value={sentence}
-                onChange={(e) => setSentence(e.target.value)}
-                rows={4}
-                className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm w-full resize-none"
-              />
-              <p className="text-gray-600 text-xs mt-1 text-right">{sentence.length}/280</p>
-            </div>
-
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={loading || !name || !country || !sentence}
-              className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 mt-2"
-            >
-              {loading ? "Creating your page..." : "Create my permanent page"}
-            </button>
-          </div>
-        </form>
+      {error && (
+        <p className="text-red-400 text-sm mt-3">{error}</p>
       )}
+
+      <div className="mt-24 border-t border-white/5 pt-12 w-full max-w-2xl">
+        <p className="text-xs text-gray-600 text-center mb-8 uppercase tracking-widest">Recent humans</p>
+        <div className="flex flex-col gap-4">
+          {[
+            { num: "8,109,441,892", text: "I loved my children more than they ever knew.", location: "Lagos, Nigeria" },
+            { num: "8,109,441,651", text: "Curiosity was the only religion I kept my whole life.", location: "Osaka, Japan" },
+            { num: "8,109,440,887", text: "I taught for 34 years. I hope one of them remembers.", location: "São Paulo, Brazil" },
+          ].map((h) => (
+            <div key={h.num} className="border border-white/5 rounded-lg px-5 py-4">
+              <p className="text-white text-sm leading-relaxed">"{h.text}"</p>
+              <p className="text-gray-600 text-xs mt-2">Human #{h.num} · {h.location}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
     </main>
   );
