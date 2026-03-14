@@ -3,11 +3,18 @@ import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import { useRouter } from "next/navigation";
 
+type Human = {
+  human_number: number;
+  sentence: string;
+  country: string;
+};
+
 export default function Home() {
   const [count, setCount] = useState(8109442017);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [humans, setHumans] = useState<Human[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,6 +22,19 @@ export default function Home() {
       setCount((c) => c + Math.floor(Math.random() * 2));
     }, 3000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    async function fetchHumans() {
+      const { data } = await supabase
+        .from("signups")
+        .select("human_number, sentence, country")
+        .not("sentence", "is", null)
+        .order("human_number", { ascending: false })
+        .limit(5);
+      if (data) setHumans(data);
+    }
+    fetchHumans();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -88,16 +108,14 @@ export default function Home() {
       <div className="mt-24 border-t border-white/5 pt-12 w-full max-w-2xl">
         <p className="text-xs text-gray-600 text-center mb-8 uppercase tracking-widest">Recent humans</p>
         <div className="flex flex-col gap-4">
-          {[
-            { num: "8,109,441,892", text: "I loved my children more than they ever knew.", location: "Lagos, Nigeria" },
-            { num: "8,109,441,651", text: "Curiosity was the only religion I kept my whole life.", location: "Osaka, Japan" },
-            { num: "8,109,440,887", text: "I taught for 34 years. I hope one of them remembers.", location: "São Paulo, Brazil" },
-          ].map((h) => (
-            <div key={h.num} className="border border-white/5 rounded-lg px-5 py-4">
-              <p className="text-white text-sm leading-relaxed">"{h.text}"</p>
-              <p className="text-gray-600 text-xs mt-2">Human #{h.num} · {h.location}</p>
-            </div>
-          ))}
+          {humans.length > 0 ? humans.map((h) => (
+            <a href={`/human/${h.human_number}`} key={h.human_number} className="border border-white/5 rounded-lg px-5 py-4 hover:border-white/20 transition-colors">
+              <p className="text-white text-sm leading-relaxed">"{h.sentence}"</p>
+              <p className="text-gray-600 text-xs mt-2">Human #{h.human_number} · {h.country}</p>
+            </a>
+          )) : (
+            <p className="text-gray-600 text-sm text-center">Be the first to claim your page.</p>
+          )}
         </div>
       </div>
 
