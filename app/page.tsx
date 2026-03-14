@@ -1,10 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
 export default function Home() {
   const [count, setCount] = useState(8109442017);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -13,9 +16,26 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (email) setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    const { error } = await supabase
+      .from("signups")
+      .insert([{ email }]);
+
+    if (error) {
+      if (error.code === "23505") {
+        setError("This email is already registered.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+      setLoading(false);
+    } else {
+      setSubmitted(true);
+      setLoading(false);
+    }
   }
 
   return (
@@ -55,9 +75,10 @@ export default function Home() {
           />
           <button
             type="submit"
-            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+            disabled={loading}
+            className="bg-white text-black font-medium px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
-            Claim your page
+            {loading ? "Saving..." : "Claim your page"}
           </button>
         </form>
       ) : (
@@ -65,6 +86,10 @@ export default function Home() {
           <p className="text-green-400 text-lg font-medium">You are on the list.</p>
           <p className="text-gray-500 text-sm mt-1">We will contact you when your page is ready.</p>
         </div>
+      )}
+
+      {error && (
+        <p className="text-red-400 text-sm mt-3">{error}</p>
       )}
 
       <div className="mt-24 border-t border-white/5 pt-12 w-full max-w-2xl">
